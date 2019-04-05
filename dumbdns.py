@@ -20,8 +20,8 @@ if __name__ == "__main__":
                         help='Cache Timeout in [s], default value is 3600.',
                         default=3600,
                         type=int)
-    parser.add_argument('-F', '--filter',
-    					help='JSON containing names/domains used to redirect to another IP')
+    parser.add_argument('-F', '--forward',
+    					help='JSON containing names/domains used to be forwarded to another IP')
     parser.add_argument('-B', '--blocked',
     					help='JSON containing names/domains that will not receive a response')
     
@@ -29,7 +29,25 @@ if __name__ == "__main__":
 
     port = args.port
     cache_timeout = args.cache_timeout
+    forward = {}
+    blocked = {}
 
     if  port <= 1024:
     	print("Port value should be greater than 1024")
     	return errno.EINVAL
+
+    if args.forward:
+    	with open(args.forward, 'r', encoding='utf-8') as file:
+    		try:
+    			forward = json.load(file)
+
+    		finally:
+    			file.close()
+
+    if args.blocked:
+    	with open(args.blocked, 'r', encoding='utf-8') as file:
+    		try:
+    			blocked = json.load(file)
+
+    		finally:
+    			file.close()
