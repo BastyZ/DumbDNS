@@ -29,8 +29,8 @@ class Server:
             print("Received:\n", request)
             # Ask to DNS server
             response = self.dns_query(request)
-            # response is the same query (worst)
-            # FIXME delet this
+            # send response
+            print(address)
             socket.sendto(response, address)
 
     def dns_query(self, request):
