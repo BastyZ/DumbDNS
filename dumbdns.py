@@ -15,8 +15,10 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	port = args.port
+	
+	cache_timeout = 3600
 	if args.cache_timeout:
 		cache = args.cache_timeout
 
-	
+
 
