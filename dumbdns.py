@@ -34,8 +34,9 @@ class Server:
             socket.sendto(response, address)
 
     def dns_query(self, request):
+        print("gonna ask to DNS")
         dns_socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)
-        dns_socket.connect((self.resolver, self.port+1))
+        dns_socket.connect((self.resolver, 53))
         dns_socket.sendto(request, (self.resolver, 53))
         response, resolver = dns_socket.recvfrom(4096)
         print("Received from {} \n {}".format(self.resolver, response))
