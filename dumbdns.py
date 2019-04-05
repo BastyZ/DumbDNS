@@ -1,7 +1,6 @@
 import argparse
 import json
 import socket as libsock
-import random
 import struct
 import time
 import errno
@@ -13,14 +12,20 @@ localhost = "127.0.0.1"
 class Server:
     def __init__(self, port, timeout, forward, blocked):
         host = localhost
-        socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)  # IPv4 & UDP
+        socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)  # IPv4, UDP
+        socket.bind((host, port))
         print("server listening on {}:{}".format(host, port))
         # Main Loop
         while True:
             data, address = socket.recvfrom(1024)
-            print("Received: ", data)
+            print("Received:\n", data)
+            # Ask to DNS server
+            # self.dns_query(data)
             # response the same query (worst)
             socket.sendto(data, address)
+
+    def dns_query(data):
+        dns_socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)
 
 
 def main(args):
