@@ -10,26 +10,41 @@ localhost = "127.0.0.1"
 
 
 class Server:
-    def __init__(self, port, timeout, forward, blocked):
+    def __init__(self, port, resolver, timeout, forward, blocked):
+        # Variables
+        self.port = port
+        self.resolver = resolver
+        self.timeout = timeout
+        self.forward = forward
+        self.blocked = blocked
+
+        # Actual code
         host = localhost
         socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)  # IPv4, UDP
         socket.bind((host, port))
         print("server listening on {}:{}".format(host, port))
         # Main Loop
         while True:
-            data, address = socket.recvfrom(1024)
-            print("Received:\n", data)
+            request, address = socket.recvfrom(1024)
+            print("Received:\n", request)
             # Ask to DNS server
-            # self.dns_query(data)
-            # response the same query (worst)
-            socket.sendto(data, address)
+            response = self.dns_query(request)
+            # response is the same query (worst)
+            # FIXME delet this
+            socket.sendto(response, address)
 
-    def dns_query(data):
+    def dns_query(self, request):
         dns_socket = libsock.socket(libsock.AF_INET, libsock.SOCK_DGRAM)
+        dns_socket.connect((self.resolver, self.port+1))
+        dns_socket.sendto(request, (self.resolver, 53))
+        response, resolver = dns_socket.recvfrom(4096)
+        print("Received from {} \n {}".format(self.resolver, response))
+        return response
 
 
 def main(args):
     port = args.port
+    resolver = args.resolver
     cache_timeout = args.cache
     forward = {}
     blocked = {}
@@ -53,7 +68,7 @@ def main(args):
 
             finally:
                 file.close()
-    Server(port, cache_timeout, forward, blocked)
+    Server(port, resolver, cache_timeout, forward, blocked)
 
 
 if __name__ == "__main__":
@@ -64,6 +79,9 @@ if __name__ == "__main__":
                         help='Port used for the request. Default port is 1025',
                         default=1025,
                         type=int)
+    parser.add_argument('-R', '--resolver',
+                        help='Resolver to get an actual answer',
+                        default='1.1.1.1')
     parser.add_argument('-C', '--cache',
                         help='Cache Timeout in [s], default value is 3600.',
                         default=3600,
