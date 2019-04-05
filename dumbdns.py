@@ -6,6 +6,7 @@ import time
 import errno
 import sys
 
+
 localhost = "127.0.0.1"
 
 
@@ -27,10 +28,10 @@ class Server:
         while True:
             request, address = socket.recvfrom(1024)
             print("Received:\n", request)
+            self.analize_request(request)
             # Ask to DNS server
             response = self.dns_query(request)
             # send response
-            print(address)
             socket.sendto(response, address)
 
     def dns_query(self, request):
@@ -41,6 +42,12 @@ class Server:
         response, resolver = dns_socket.recvfrom(4096)
         print("Received from {} \n {}".format(self.resolver, response))
         return response
+
+    def analize_request(self, request):
+        h, s, L, question_mark = struct.unpack("H8sL?", request[:25])  # Hago unpack de la info recibida
+        response = "{} @ {} @ {} @ {}".format(h, s.decode(), L, int(question_mark))  # la formateo como texto
+        print("Enviaré esta respuesta: " + response)  # esta es la cadena formateada como sale en el enunciado
+        print("QR: ", b'1000' and s)
 
 
 def main(args):
