@@ -28,7 +28,8 @@ class Server:
         while True:
             request, address = socket.recvfrom(1024)
             print("Received:\n", request)
-            self.analize_request(request)
+            self.analise_header(request)
+            self.analise_qsection(request[13:])  # req without header
             # Ask to DNS server
             response = self.dns_query(request)
             # send response
@@ -43,11 +44,28 @@ class Server:
         print("Received from {} \n {}".format(self.resolver, response))
         return response
 
-    def analize_request(self, request):
-        h, s, L, question_mark = struct.unpack("H8sL?", request[:25])  # Hago unpack de la info recibida
-        response = "{} @ {} @ {} @ {}".format(h, s.decode(), L, int(question_mark))  # la formateo como texto
+    def analise_header(self, request):
+        hid, things, qdc, anc, nsc, arc, question_mark = \
+            struct.unpack("!6H?", request[:13])  # Hago unpack de la info recibida
+        response = "{} @ {} @ {} @ {} @ {} @ {} @ {}".format(
+            hid, binary_str(things, 16),
+            binary_str(qdc, 16), anc, nsc, arc, int(question_mark))  # la formateo como texto
         print("Enviaré esta respuesta: " + response)  # esta es la cadena formateada como sale en el enunciado
-        print("QR: ", b'1000' and s)
+
+    def analise_qsection(self, request):
+        qname, qtype, qclass, question_mark = struct.unpack("!3H?", request[:7])
+        response = "{} @ {} @ {} @ {}".format(qname, qtype, qtype, question_mark)
+        print("QSECTION: ", response)
+
+
+def binary_str(r, l):
+    if type(r) != int:
+        r = int.from_bytes(r, byteorder='big')
+    ans = ""
+    for i in range(l):
+        ans = str(r % 2) + ans
+        r = r // 2
+    return ans
 
 
 def main(args):
