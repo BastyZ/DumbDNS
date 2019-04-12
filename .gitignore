@@ -79,3 +79,8 @@ fabric.properties
 
 # Custom
 copypaste.py
+
+DumbDNS.iml
+misc.xml
+modules.xml
+vcs.xml
