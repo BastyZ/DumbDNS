@@ -20,6 +20,7 @@ class Server:
         self.blocked = blocked
         self.hostname = ""
         self.ip = ""
+        self.qtype = ""
 
         # Actual code
         host = localhost
@@ -31,13 +32,17 @@ class Server:
             # Reset values
             self.hostname = ""
             self.ip = ""
-
+            self.qtype = ""
             request, address = socket.recvfrom(1024)
             print("Received:\n", request)
+
+            # Parse Request
             self.analise_header(request)
-            self.analise_qsection(request[12:])  # req without header
+            offset = self.analise_qsection(request[12:])  # req without header
             # Ask to DNS server
             response = self.dns_query(request)
+            # Parse Response
+            self.analise_rsection(response[12:])
             # send response
             socket.sendto(response, address)
 
@@ -60,14 +65,19 @@ class Server:
 
     def analise_qsection(self, request):
         qname, carriage = qname_str(request)
-        self.hostname = qname
         qtype, qtype_str = qtype_int(request[carriage:])
+        self.hostname = qname
+        self.qtype = qname_str
         print("qname is", qname)
         print("qtype is", qtype, qtype_str)
+        return carriage
+
+    def analise_rsection(self, res):
+        pass
 
 
-def log(hostname, ip):
-    return datetime.datetime.utcnow().isoformat()+":: hostname "+hostname+" | ip "+ip+"\n"
+def log(hostname, ip, qtype):
+    return datetime.datetime.utcnow().isoformat()+":: hostname "+hostname+" | "+qtype+" | ip "+ip+"\n"
 
 
 def qname_str(request):
