@@ -2,7 +2,7 @@ import argparse
 import json
 import socket as libsock
 import struct
-import time
+import datetime
 import errno
 import sys
 
@@ -52,12 +52,15 @@ class Server:
             binary_str(qdc, 16), anc, nsc, arc, int(question_mark))  # la formateo como texto
         print("Enviaré esta respuesta: " + response)  # esta es la cadena formateada como sale en el enunciado
 
-
     def analise_qsection(self, request):
         qname, carriage = qname_str(request)
         qtype, qtype_str = qtype_int(request[carriage:])
         print("qname is", qname)
         print("qtype is", qtype, qtype_str)
+
+
+def log(hostname, ip):
+    return datetime.datetime.utcnow().isoformat()+":: hostname "+hostname+" | ip "+ip+"\n"
 
 
 def qname_str(request):
