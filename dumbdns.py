@@ -18,6 +18,8 @@ class Server:
         self.timeout = timeout
         self.forward = forward
         self.blocked = blocked
+        self.hostname = ""
+        self.ip = ""
 
         # Actual code
         host = localhost
@@ -26,6 +28,10 @@ class Server:
         print("server listening on {}:{}".format(host, port))
         # Main Loop
         while True:
+            # Reset values
+            self.hostname = ""
+            self.ip = ""
+
             request, address = socket.recvfrom(1024)
             print("Received:\n", request)
             self.analise_header(request)
@@ -54,6 +60,7 @@ class Server:
 
     def analise_qsection(self, request):
         qname, carriage = qname_str(request)
+        self.hostname = qname
         qtype, qtype_str = qtype_int(request[carriage:])
         print("qname is", qname)
         print("qtype is", qtype, qtype_str)
