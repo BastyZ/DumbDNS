@@ -29,7 +29,7 @@ class Server:
             request, address = socket.recvfrom(1024)
             print("Received:\n", request)
             self.analise_header(request)
-            self.analise_qsection(request[13:])  # req without header
+            self.analise_qsection(request[12:])  # req without header
             # Ask to DNS server
             response = self.dns_query(request)
             # send response
@@ -52,10 +52,52 @@ class Server:
             binary_str(qdc, 16), anc, nsc, arc, int(question_mark))  # la formateo como texto
         print("Enviaré esta respuesta: " + response)  # esta es la cadena formateada como sale en el enunciado
 
+
     def analise_qsection(self, request):
-        qname, qtype, qclass, question_mark = struct.unpack("!3H?", request[:7])
-        response = "{} @ {} @ {} @ {}".format(qname, qtype, qtype, question_mark)
-        print("QSECTION: ", response)
+        qname, carriage = qname_str(request)
+        qtype, qtype_str = qtype_int(request[carriage:])
+        print("qname is", qname)
+        print("qtype is", qtype, qtype_str)
+
+
+def qname_str(request):
+    i = 0
+    ans = ""
+    while True:
+        length = struct.unpack("!B", request[i:i+1])
+        length = int.from_bytes(length, byteorder='big')
+        if length == 0:
+            break
+
+        i = i+1
+        text = ""
+        for j in range(i, i + length):
+            c = struct.unpack("!B", request[j:j+1])
+            text = text + str(chr(c[0]))
+
+        if len(ans) > 0:
+            ans = ans + "." + text
+        else:
+            ans = text
+
+        i = i + length
+
+    return ans, i + 1
+
+
+def qtype_int(request):
+    qtype = struct.unpack("!H", request[:2])
+    qtype = int.from_bytes(qtype, byteorder='big')
+
+    qtype_str = ""
+    if qtype == 1:
+        qtype_str = "A"
+    elif qtype == 28:
+        qtype_str = "AAAA"
+    elif qtype == 15:
+        qtype_str = "MX"
+
+    return qtype, qtype_str
 
 
 def binary_str(r, l):
