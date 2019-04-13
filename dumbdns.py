@@ -6,7 +6,6 @@ import datetime
 import errno
 import sys
 
-
 localhost = "127.0.0.1"
 
 
@@ -42,7 +41,7 @@ class Server:
             # Ask to DNS server
             response = self.dns_query(request)
             # Parse Response
-            self.analise_rsection(response[12:])
+            self.analise_rsection(response, response[12 + offset:])
             # send response
             socket.sendto(response, address)
 
@@ -70,29 +69,43 @@ class Server:
         self.qtype = qname_str
         print("qname is", qname)
         print("qtype is", qtype, qtype_str)
-        return carriage
+        return carriage + 4  # +4 por qtype y qclass
 
-    def analise_rsection(self, res):
-        pass
+    def analise_rsection(self, response, r_section):
+        pointer = struct.unpack("!H", r_section[:2])
+        if binary_str(pointer[0], 16)[:2] == "11":
+            # Hay un puntero y morimos conchetumadre
+            offset = binary_str(pointer[0], 16)[2:]
+            print("el offset es", offset)
+            #TODO smth
+            advance = 2
+        else:
+            # la misma wea que en el qsection
+            # TODO parse name
+            advance = 2
+            pass
+        rtype, rclass, ttl, rdlength = struct.unpack("!2HLH", r_section[advance:advance+10])
+        ip1, ip2, ip3, ip4 = struct.unpack("!4B", r_section[advance+10:advance+10+rdlength])
+        print(ip1, ip2, ip3, ip4)
 
 
 def log(hostname, ip, qtype):
-    return datetime.datetime.utcnow().isoformat()+":: hostname "+hostname+" | "+qtype+" | ip "+ip+"\n"
+    return datetime.datetime.utcnow().isoformat() + ":: hostname " + hostname + " | " + qtype + " | ip " + ip + "\n"
 
 
 def qname_str(request):
     i = 0
     ans = ""
     while True:
-        length = struct.unpack("!B", request[i:i+1])
+        length = struct.unpack("!B", request[i:i + 1])
         length = int.from_bytes(length, byteorder='big')
         if length == 0:
             break
 
-        i = i+1
+        i = i + 1
         text = ""
         for j in range(i, i + length):
-            c = struct.unpack("!B", request[j:j+1])
+            c = struct.unpack("!B", request[j:j + 1])
             text = text + str(chr(c[0]))
 
         if len(ans) > 0:
