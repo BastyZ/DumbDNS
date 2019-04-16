@@ -22,6 +22,7 @@ class Server:
         self.qtype = ""
         self.response = ""
         self.cache = {}
+        self.addr = ""
 
         # Actual code
         host = localhost
@@ -35,6 +36,9 @@ class Server:
             self.ip = ""
             self.qtype = ""
             request, address = socket.recvfrom(1024)
+            print("Request pal Ale;¿::", request)
+            self.address = address
+            self.addr = address[0]+":"+str(address[1])
             print("Received:\n", request)
 
             # Parse Request
@@ -42,36 +46,55 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            if self.cache[self.hostname] and self.cache[self.hostname].time + self.timeout < datetime.datetime.utcnow():
-                socket.sendto(self.cache[self.hostname], address)
+            if self.cache and self.cache[self.hostname] \
+                    and self.cache[self.hostname]["time"] + self.timeout > datetime.datetime.utcnow():
+                print("Cache used with", self.hostname)
+                cache = self.cache[self.hostname]
+                self.ip = cache["ip"]
+                self.qtype = cache["qtype"]
+                self.log(cached=True)
+                socket.sendto(request[:2] + self.cache[self.hostname]["response"][2:], address)
                 continue
 
-            # Block or FWD
+            # Block like Terry Crews
             if blocked and self.hostname in blocked.names:
+                self.log(blocked=True)
                 continue
-            if forward and self.hostname in forward:
-                # TODO re-build query with new hostname
-                # forward_dns(forward)
-                pass
+
             # Ask to DNS server
             self.response = self.dns_query(request)
             # Parse Response
             self.analise_rsection(self.response[12 + offset:])
+
+            # Check FWD
+            if forward and self.hostname in forward:
+                self.forward_dns(forward[self.hostname], offset)
+                # TODO log
+                self.log(filtered=True)
+                # Add to cache
+                self.cache[self.hostname] = dict(response=self.response, time=datetime.datetime.utcnow()
+                                                 , ip=forward[self.hostname], qtype=self.qtype)
+                socket.sendto(self.response, self.address)
+                continue
+
             # Make log in file
-            with open("log.txt", "a", encoding="utf-8") as file:
-                try:
-                    file.write(log(self.hostname, self.ip, self.qtype))
-                except:
-                    print("ERROR: cannot write on log.txt")
-                finally:
-                    file.close()
+            self.log()
 
             # Write to Cache
-            self.cache[self.hostname].response = self.response
-            self.cache[self.hostname].time = datetime.datetime.utcnow()
+            self.cache[self.hostname] = dict(response=self.response, time=datetime.datetime.utcnow(), ip=self.ip
+                                             , qtype=self.qtype)
 
             # send response
             socket.sendto(self.response, address)
+
+    def forward_dns(self, new_ip, offset):
+        print("Forwarding")
+        if self.qtype != "MX":
+            pointer = struct.unpack("!H", self.response[12 + offset:14 + offset])
+            advance = 12 if binary_str(pointer[0], 16)[:2] == "11" else qname_str(self.response[12 + offset:])[1] + 10
+            self.response = self.response[:12 + offset + advance] + ip_to_bytes(new_ip) \
+                            + self.response[12 + offset + advance + (4 if self.qtype == "A" else 6):]
+
 
     def dns_query(self, request):
         print("gonna ask to DNS")
@@ -111,7 +134,7 @@ class Server:
             print("el sitio es:", qname)
             advance = 2
         else:
-            # la misma wea que en el qsection
+            # lo mismo que en el qsection
             qname, carriage = qname_str(r_section)
             advance = carriage
         rtype, rclass, ttl, rdlength = struct.unpack("!2HLH", r_section[advance:advance + 10])
@@ -119,9 +142,29 @@ class Server:
         print(ip1, ip2, ip3, ip4)
         self.ip = str(ip1) + "." + str(ip2) + "." + str(ip3) + "." + str(ip4)
 
+    def log(self, cached=False, blocked=False, filtered=False):
+        with open("log.txt", "a", encoding="utf-8") as file:
+            try:
+                file.write(log(self.addr, self.hostname, self.ip, self.qtype, cached, blocked, filtered))
+            except Exception as e:
+                print("ERROR: cannot write on log.txt", e)
+            finally:
+                file.close()
 
-def log(hostname, ip, qtype):
-    return datetime.datetime.utcnow().isoformat() + ":: hostname " + hostname + " | " + qtype + " | ip " + ip + "\n"
+
+def log(address, hostname, ip, qtype, cached=False, blocked=False, filtered=False):
+    return datetime.datetime.utcnow().isoformat() + " :: client " + address + " hostname " + hostname + " | " + qtype \
+           + " | ip " + ip + (" :: cached answer" if cached else "") + (" :: blocked answer" if blocked else "") \
+           + (" :: filtered answer" if filtered else "") + "\n"
+
+
+def ip_to_bytes(ip):
+    print(" gonna write ", ip)
+    arr = ip.split('.')
+    ans = list()
+    for num in arr:
+        ans.append(int(num))
+    return bytearray(ans)
 
 
 def qname_str(request):
@@ -209,7 +252,7 @@ def main(args):
 
             finally:
                 file.close()
-    Server(port, resolver, datetime.timedelta(minutes=cache_timeout), forward, blocked)
+    Server(port, resolver, datetime.timedelta(seconds=cache_timeout), forward, blocked)
 
 
 if __name__ == "__main__":
@@ -228,7 +271,8 @@ if __name__ == "__main__":
                         default=3600,
                         type=int)
     parser.add_argument('-F', '--forward',
-                        help='JSON containing names/domains used to be forwarded to another IP')
+                        help='JSON containing names/domains used to be forwarded to another IP \n'
+                             + ' with format {"page": "ip"} ')
     parser.add_argument('-B', '--blocked',
                         help='JSON containing names/domains that will not receive a response')
 
