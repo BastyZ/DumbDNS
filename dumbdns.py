@@ -57,7 +57,7 @@ class Server:
                 continue
 
             # Block like Terry Crews
-            if blocked and self.hostname in blocked.names:
+            if blocked and self.hostname in blocked["names"]:
                 self.log(blocked=True)
                 continue
 
@@ -274,6 +274,7 @@ if __name__ == "__main__":
                         help='JSON containing names/domains used to be forwarded to another IP \n'
                              + ' with format {"page": "ip"} ')
     parser.add_argument('-B', '--blocked',
-                        help='JSON containing names/domains that will not receive a response')
+                        help='JSON containing names/domains that will not receive a response\n'
+                            + 'with format {"names": [page1, page2, ...]}')
 
     main(parser.parse_args())
