@@ -44,7 +44,13 @@ class Server:
             # Parse Response
             self.analise_rsection(self.response[12 + offset:])
             # Make log in file
-
+            with open("log.txt", "a", encoding="utf-8") as file:
+                try:
+                    file.write(log(self.hostname, self.ip, self.qtype))
+                except:
+                    print("ERROR: cannot write on log.txt")
+                finally:
+                    file.close()
             # send response
             socket.sendto(self.response, address)
 
@@ -89,8 +95,8 @@ class Server:
             # la misma wea que en el qsection
             qname, carriage = qname_str(r_section)
             advance = carriage
-        rtype, rclass, ttl, rdlength = struct.unpack("!2HLH", r_section[advance:advance+10])
-        ip1, ip2, ip3, ip4 = struct.unpack("!4B", r_section[advance+10:advance+10+rdlength])
+        rtype, rclass, ttl, rdlength = struct.unpack("!2HLH", r_section[advance:advance + 10])
+        ip1, ip2, ip3, ip4 = struct.unpack("!4B", r_section[advance + 10:advance + 10 + rdlength])
         print(ip1, ip2, ip3, ip4)
         self.ip = str(ip1) + "." + str(ip2) + "." + str(ip3) + "." + str(ip4)
 
@@ -152,7 +158,7 @@ def binary_str(r, l):
 def int_f_binary_str(b):
     ans = 0
     carry = 1
-    for i in range(len(b)-1, -1, -1):
+    for i in range(len(b) - 1, -1, -1):
         ans = ans + (carry if b[i] == '1' else 0)
         carry = carry * 2
     return ans
