@@ -42,7 +42,7 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            if self.cache[self.hostname] and self.cache[self.hostname].time + timeout < datetime.datetime.utcnow():
+            if self.cache[self.hostname] and self.cache[self.hostname].time + self.timeout < datetime.datetime.utcnow():
                 socket.sendto(self.cache[self.hostname], address)
                 continue
 
