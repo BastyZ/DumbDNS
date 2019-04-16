@@ -20,6 +20,7 @@ class Server:
         self.hostname = ""
         self.ip = ""
         self.qtype = ""
+        self.response = ""
 
         # Actual code
         host = localhost
@@ -39,11 +40,13 @@ class Server:
             self.analise_header(request)
             offset = self.analise_qsection(request[12:])  # req without header
             # Ask to DNS server
-            response = self.dns_query(request)
+            self.response = self.dns_query(request)
             # Parse Response
-            self.analise_rsection(response, response[12 + offset:])
+            self.analise_rsection(self.response[12 + offset:])
+            # Make log in file
+
             # send response
-            socket.sendto(response, address)
+            socket.sendto(self.response, address)
 
     def dns_query(self, request):
         print("gonna ask to DNS")
@@ -66,27 +69,30 @@ class Server:
         qname, carriage = qname_str(request)
         qtype, qtype_str = qtype_int(request[carriage:])
         self.hostname = qname
-        self.qtype = qname_str
+        self.qtype = qtype_str
         print("qname is", qname)
         print("qtype is", qtype, qtype_str)
         return carriage + 4  # +4 por qtype y qclass
 
-    def analise_rsection(self, response, r_section):
+    def analise_rsection(self, r_section):
         pointer = struct.unpack("!H", r_section[:2])
         if binary_str(pointer[0], 16)[:2] == "11":
             # Hay un puntero y morimos conchetumadre
             offset = binary_str(pointer[0], 16)[2:]
             print("el offset es", offset)
-            #TODO smth
+            offset = int_f_binary_str(offset)
+            print("el offset ahora es", offset)
+            qname, useless = qname_str(self.response[offset:])
+            print("el sitio es:", qname)
             advance = 2
         else:
             # la misma wea que en el qsection
-            # TODO parse name
-            advance = 2
-            pass
+            qname, carriage = qname_str(r_section)
+            advance = carriage
         rtype, rclass, ttl, rdlength = struct.unpack("!2HLH", r_section[advance:advance+10])
         ip1, ip2, ip3, ip4 = struct.unpack("!4B", r_section[advance+10:advance+10+rdlength])
         print(ip1, ip2, ip3, ip4)
+        self.ip = str(ip1) + "." + str(ip2) + "." + str(ip3) + "." + str(ip4)
 
 
 def log(hostname, ip, qtype):
@@ -140,6 +146,15 @@ def binary_str(r, l):
     for i in range(l):
         ans = str(r % 2) + ans
         r = r // 2
+    return ans
+
+
+def int_f_binary_str(b):
+    ans = 0
+    carry = 1
+    for i in range(len(b)-1, -1, -1):
+        ans = ans + (carry if b[i] == '1' else 0)
+        carry = carry * 2
     return ans
 
 
