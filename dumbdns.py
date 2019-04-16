@@ -21,6 +21,7 @@ class Server:
         self.ip = ""
         self.qtype = ""
         self.response = ""
+        self.cache = {}
 
         # Actual code
         host = localhost
@@ -39,6 +40,19 @@ class Server:
             # Parse Request
             self.analise_header(request)
             offset = self.analise_qsection(request[12:])  # req without header
+
+            # Lookup on Cache
+            if self.cache[self.hostname] and self.cache[self.hostname].time + timeout < datetime.datetime.utcnow():
+                socket.sendto(self.cache[self.hostname], address)
+                continue
+
+            # Block or FWD
+            if blocked and self.hostname in blocked.names:
+                continue
+            if forward and self.hostname in forward:
+                # TODO re-build query with new hostname
+                # forward_dns(forward)
+                pass
             # Ask to DNS server
             self.response = self.dns_query(request)
             # Parse Response
@@ -51,6 +65,11 @@ class Server:
                     print("ERROR: cannot write on log.txt")
                 finally:
                     file.close()
+
+            # Write to Cache
+            self.cache[self.hostname].response = self.response
+            self.cache[self.hostname].time = datetime.datetime.utcnow()
+
             # send response
             socket.sendto(self.response, address)
 
@@ -190,7 +209,7 @@ def main(args):
 
             finally:
                 file.close()
-    Server(port, resolver, cache_timeout, forward, blocked)
+    Server(port, resolver, datetime.timedelta(minutes=cache_timeout), forward, blocked)
 
 
 if __name__ == "__main__":
