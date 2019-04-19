@@ -46,7 +46,7 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            if self.cache and self.cache[self.hostname] \
+            if self.cache and self.cache[self.hostname] and self.cache[self.hostname]["qtype"] == self.qtype    \
                     and self.cache[self.hostname]["time"] + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
                 cache = self.cache[self.hostname]
