@@ -52,12 +52,13 @@ class Server:
                 self.write_cache()
 
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
-                    and datetime.datetime.strptime(self.cache[self.hostname][self.qtype]["time"], '%Y-%m-%d %H:%M:%S.%f') + self.timeout > datetime.datetime.utcnow():
+                    and datetime.datetime.strptime(self.cache[self.hostname][self.qtype]["time"], '%Y-%m-%d %H:%M:%S.%f')\
+                    + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
                 cache = self.cache[self.hostname][self.qtype]
                 self.ip = cache["ip"]
                 self.log(cached=True)
-                socket.sendto(request[:2] + self.cache[self.hostname]["response"][2:], address)
+                socket.sendto(request[:2] + self.cache[self.hostname][self.qtype]["response"][2:], address)
                 continue
 
             # Block like Terry Crews
