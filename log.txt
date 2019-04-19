@@ -1,0 +1,4 @@
+2019-04-19T01:44:12.836449 :: client 127.0.0.1:47998 hostname facebook.com | A | ip 179.60.193.35
+2019-04-19T01:52:59.404051 :: client 127.0.0.1:37663 hostname facebook.com | A | ip 179.60.193.35
+2019-04-19T01:54:02.883386 :: client 127.0.0.1:36306 hostname facebook.com | A | ip 179.60.193.35
+2019-04-19T02:04:31.780040 :: client 127.0.0.1:33312 hostname facebook.com | A | ip 179.60.193.35

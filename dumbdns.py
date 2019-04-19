@@ -5,6 +5,7 @@ import struct
 import datetime
 import errno
 import sys
+from ast import literal_eval
 
 localhost = "127.0.0.1"
 
@@ -36,7 +37,6 @@ class Server:
             self.ip = ""
             self.qtype = ""
             request, address = socket.recvfrom(1024)
-            print("Request pal Ale;¿::", request)
             self.address = address
             self.addr = address[0]+":"+str(address[1])
             print("Received:\n", request)
@@ -46,12 +46,12 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            if self.cache and self.cache[self.hostname] and self.cache[self.hostname]["qtype"] == self.qtype    \
-                    and self.cache[self.hostname]["time"] + self.timeout > datetime.datetime.utcnow():
+            self.get_cache()
+            if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
+                    and self.cache[self.hostname][self.qtype]["time"] + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
-                cache = self.cache[self.hostname]
+                cache = self.cache[self.hostname][self.qtype]
                 self.ip = cache["ip"]
-                self.qtype = cache["qtype"]
                 self.log(cached=True)
                 socket.sendto(request[:2] + self.cache[self.hostname]["response"][2:], address)
                 continue
@@ -69,11 +69,11 @@ class Server:
             # Check FWD
             if forward and self.hostname in forward:
                 self.forward_dns(forward[self.hostname], offset)
-                # TODO log
                 self.log(filtered=True)
                 # Add to cache
-                self.cache[self.hostname] = dict(response=self.response, time=datetime.datetime.utcnow()
-                                                 , ip=forward[self.hostname], qtype=self.qtype)
+                self.cache[self.hostname][self.qtype] = dict(response=literal_eval(self.response.decode("utf-8")),
+                                                             time=datetime.datetime.utcnow(), ip=forward[self.hostname])
+                self.write_cache()
                 socket.sendto(self.response, self.address)
                 continue
 
@@ -81,9 +81,12 @@ class Server:
             self.log()
 
             # Write to Cache
-            self.cache[self.hostname] = dict(response=self.response, time=datetime.datetime.utcnow(), ip=self.ip
-                                             , qtype=self.qtype)
 
+            if not self.cache or not self.cache[self.hostname]:
+                self.cache[self.hostname] = dict()
+            self.cache[self.hostname][self.qtype] = dict(response=literal_eval(self.response.decode("utf-8"),
+                                                         time=datetime.datetime.utcnow(), ip=self.ip)
+            self.write_cache()
             # send response
             socket.sendto(self.response, address)
 
@@ -94,7 +97,6 @@ class Server:
             advance = 12 if binary_str(pointer[0], 16)[:2] == "11" else qname_str(self.response[12 + offset:])[1] + 10
             self.response = self.response[:12 + offset + advance] + ip_to_bytes(new_ip) \
                             + self.response[12 + offset + advance + (4 if self.qtype == "A" else 6):]
-
 
     def dns_query(self, request):
         print("gonna ask to DNS")
@@ -148,6 +150,25 @@ class Server:
                 file.write(log(self.addr, self.hostname, self.ip, self.qtype, cached, blocked, filtered))
             except Exception as e:
                 print("ERROR: cannot write on log.txt", e)
+            finally:
+                file.close()
+
+    def write_cache(self):
+        with open("cache.json", "w", encoding="utf-8") as file:
+            try:
+                json.dump(self.cache, file)
+            except Exception as e:
+                print("ERROR: problem while writing cache.json", e)
+            finally:
+                file.close()
+
+    def get_cache(self):
+        with open("cache.json", "r", encoding="utf-8") as file:
+            try:
+                self.cache = json.load(file)
+            except ValueError as e:
+                print("No cache or invalid JSON:", e)
+                self.cache = {}
             finally:
                 file.close()
 
