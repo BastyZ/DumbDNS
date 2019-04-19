@@ -52,7 +52,7 @@ class Server:
                 self.write_cache()
 
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
-                    and datetime.datetime(self.cache[self.hostname][self.qtype]["time"]) + self.timeout > datetime.datetime.utcnow():
+                    and datetime.datetime.strptime(self.cache[self.hostname][self.qtype]["time"], '%Y-%m-%d %H:%M:%S.%f') + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
                 cache = self.cache[self.hostname][self.qtype]
                 self.ip = cache["ip"]
@@ -87,7 +87,6 @@ class Server:
             self.log()
 
             # Write to Cache
-
             if not self.cache or not self.cache[self.hostname]:
                 self.cache[self.hostname] = dict()
             self.cache[self.hostname][self.qtype] = dict(response=str("".join(map(chr, self.response))),
