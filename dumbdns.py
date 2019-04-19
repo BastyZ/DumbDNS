@@ -46,10 +46,10 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            try:
-                self.get_cache()
-            except FileNotFoundError:
-                self.write_cache()
+            # try:
+            #     self.get_cache()
+            # except FileNotFoundError:
+            #     self.write_cache()
 
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
                     and self.cache[self.hostname][self.qtype]["time"] + self.timeout > datetime.datetime.utcnow():
@@ -77,9 +77,9 @@ class Server:
                 # Add to cache
                 if not self.cache or not self.cache[self.hostname]:
                     self.cache[self.hostname] = dict()
-                self.cache[self.hostname][self.qtype] = dict(response="".join(map(chr, self.response)),
-                                                             time=str(datetime.datetime.utcnow()), ip=forward[self.hostname])
-                self.write_cache()
+                self.cache[self.hostname][self.qtype] = dict(response=self.response,
+                                                             time=datetime.datetime.utcnow(), ip=forward[self.hostname])
+                # self.write_cache()
                 socket.sendto(self.response, self.address)
                 continue
 
@@ -89,9 +89,9 @@ class Server:
             # Write to Cache
             if not self.cache or not self.cache[self.hostname]:
                 self.cache[self.hostname] = dict()
-            self.cache[self.hostname][self.qtype] = dict(response=str("".join(map(chr, self.response))),
-                                                         time=str(datetime.datetime.utcnow()), ip=self.ip)
-            self.write_cache()
+            self.cache[self.hostname][self.qtype] = dict(response=self.response,
+                                                         time=datetime.datetime.utcnow(), ip=self.ip)
+            # self.write_cache()
             # send response
             socket.sendto(self.response, address)
 
@@ -174,7 +174,7 @@ class Server:
                 for hostname in self.cache:
                     for qtype in self.cache[hostname]:
                         self.cache[hostname][qtype]["time"] = datetime.datetime.strptime(self.cache[hostname][qtype]["time"],
-                                                                                         "%Y-%m-%d %H:%M:%S.%fZ")
+                                                                                         "%Y-%m-%d %H:%M:%S.%f")
                         self.cache[hostname][qtype]["response"] = bytes(self.cache[hostname][qtype]["response"], 'utf-8')
             except ValueError as e:
                 print("No cache or invalid JSON:", e)
