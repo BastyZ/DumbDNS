@@ -84,4 +84,5 @@ El servidor no verifica que el formato del JSON sea correcto, por lo que es resp
 ### Otras Asunciones
 
 - El resolver devuelve en el caso de los sitios redireccionados **solo un** sitio a modo de respuesta
--  
+- El programa tiene permisos de escritura en la carpeta en la que corre
+- Se está conectado a internet (no probamos el caso en que no lo estuviera)
