@@ -50,6 +50,7 @@ class Server:
                 self.get_cache()
             except FileNotFoundError:
                 self.write_cache()
+
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
                     and datetime.datetime(self.cache[self.hostname][self.qtype]["time"]) + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
@@ -74,7 +75,7 @@ class Server:
                 self.forward_dns(forward[self.hostname], offset)
                 self.log(filtered=True)
                 # Add to cache
-                if not self.cache[self.hostname]:
+                if not self.cache or not self.cache[self.hostname]:
                     self.cache[self.hostname] = dict()
                 self.cache[self.hostname][self.qtype] = dict(response="".join(map(chr, self.response)),
                                                              time=str(datetime.datetime.utcnow()), ip=forward[self.hostname])
