@@ -73,7 +73,7 @@ class Server:
                 # Add to cache
                 self.cache[self.hostname] = dict()
                 self.cache[self.hostname][self.qtype] = dict(response="".join(map(chr, self.response)),
-                                                             time=datetime.datetime.utcnow(), ip=forward[self.hostname])
+                                                             time=str(datetime.datetime.utcnow()), ip=forward[self.hostname])
                 self.write_cache()
                 socket.sendto(self.response, self.address)
                 continue
@@ -85,8 +85,8 @@ class Server:
 
             if not self.cache or not self.cache[self.hostname]:
                 self.cache[self.hostname] = dict()
-            self.cache[self.hostname][self.qtype] = dict(response="".join(map(chr, self.response)),
-                                                         time=datetime.datetime.utcnow(), ip=self.ip)
+            self.cache[self.hostname][self.qtype] = dict(response=str("".join(map(chr, self.response))),
+                                                         time=str(datetime.datetime.utcnow()), ip=self.ip)
             self.write_cache()
             # send response
             socket.sendto(self.response, address)
