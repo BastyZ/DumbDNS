@@ -66,7 +66,10 @@ El servidor no verifica que el formato del JSON sea correcto, por lo que es resp
 
 ### Redireccionamiento
 
-El usuario puede otorgar al programa utilizando la flag ```-F``` un string conteniendo el path a algun archivo JSON conteniendo los dominios a redireccionar por el servidor, por cada dominio se debe otorgar una IP a la que se redireccionará. A continuación se presenta un ejemlo de JSON que redirecciona las consultas de _facebook.com_ a la IP de _google.com_ y las consultas de _google.com_ a _facebook.com_:
+El usuario puede otorgar al programa utilizando la flag ```-F``` un string conteniendo el path a algun archivo JSON 
+conteniendo los dominios a redireccionar por el servidor, por cada dominio se debe otorgar una IP a la que se 
+redireccionará. A continuación se presenta un ejemlo de JSON que redirecciona las consultas de _facebook.com_ a la IP 
+de _google.com_ y las consultas de _google.com_ a _facebook.com_:
 
 __forward.js__
 ```
@@ -80,3 +83,5 @@ El servidor no verifica que el formato del JSON sea correcto, por lo que es resp
 
 ### Otras Asunciones
 
+- El resolver devuelve en el caso de los sitios redireccionados **solo un** sitio a modo de respuesta
+-  
