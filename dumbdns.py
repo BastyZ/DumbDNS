@@ -71,7 +71,8 @@ class Server:
                 self.forward_dns(forward[self.hostname], offset)
                 self.log(filtered=True)
                 # Add to cache
-                self.cache[self.hostname] = dict()
+                if not self.cache[self.hostname]:
+                    self.cache[self.hostname] = dict()
                 self.cache[self.hostname][self.qtype] = dict(response="".join(map(chr, self.response)),
                                                              time=str(datetime.datetime.utcnow()), ip=forward[self.hostname])
                 self.write_cache()
