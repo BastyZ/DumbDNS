@@ -176,6 +176,7 @@ class Server:
                     for qtype in self.cache[hostname]:
                         self.cache[hostname][qtype]["time"] = datetime.datetime.strptime(self.cache[hostname][qtype]["time"],
                                                                                          "%Y-%m-%d %H:%M:%S.%fZ")
+                        self.cache[hostname][qtype]["response"] = bytes(self.cache[hostname][qtype]["response"], 'utf-8')
             except ValueError as e:
                 print("No cache or invalid JSON:", e)
                 self.cache = {}
