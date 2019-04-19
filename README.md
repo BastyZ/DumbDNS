@@ -30,11 +30,16 @@ all this are optionals, but by default comes with `-P 1025 -R 1.1.1.1 -C 3600`, 
 
 ## Explanation and assumptions (from spanish subtitles)
 
-En la tarea el servidor atiende todas las consultas en el mismo thread, y atiende preguntas en nombre de un resolvera elección seteado al momento de correr el servidor. 
+En la tarea el servidor atiende todas las consultas en el mismo thread, y atiende preguntas en nombre de un resolvera
+ elección seteado al momento de correr el servidor. 
 
-Al recibir una consulta se realiza un parseo de esta, extrayendo información relevante de esta, como la dirección a la que se realiza la consulta y el tipo de consulta.
+Al recibir una consulta se realiza un parseo de esta, extrayendo información relevante de la misma, como la dirección a 
+la que se realiza la consulta y el tipo de consulta.
 
-Una vez parseada la consulta se revisa si la respuesta está en caché, de manera que si está y aún no ha pasado el timeout de la última respuesta guardada, se responde la misma (cambiando el ID de la respuesta cacheada por el ID de la request actual). Si la respuesta no está guardada se procede a buscar el dominio en la lista de bloqueados, ignorando la request si está contenido en ella, sino, procede a realizar la consulta.
+Una vez parseada la consulta se revisa si la respuesta está en caché, de manera que si está y aún no ha pasado el
+ timeout de la última respuesta guardada, se responde la misma (cambiando el ID de la respuesta cacheada por el ID de 
+ la request actual). Si la respuesta no está guardada se procede a buscar el dominio en la lista de bloqueados, 
+ ignorando la request si está contenido en ella, sino, procede a realizar la consulta.
 
 Una vez obtenida una respuesta, se procede al parsing de la misma guardando la IP de respuesta. Si el dominio se encuentra en la lista de forwarding se cambia la IP de la respuesta por la IP otorgada por el usuario del script, guardándola en caché y respondiendo a la request.
 
