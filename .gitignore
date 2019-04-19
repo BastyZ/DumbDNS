@@ -89,3 +89,5 @@ modules.xml
 vcs.xml
 .idea/*
 log.txt
+cache.json
+json
