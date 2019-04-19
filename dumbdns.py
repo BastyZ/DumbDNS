@@ -46,7 +46,10 @@ class Server:
             offset = self.analise_qsection(request[12:])  # req without header
 
             # Lookup on Cache
-            self.get_cache()
+            try:
+                self.get_cache()
+            except FileNotFoundError:
+                self.write_cache()
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
                     and datetime.datetime(self.cache[self.hostname][self.qtype]["time"]) + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
