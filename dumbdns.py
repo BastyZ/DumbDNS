@@ -52,8 +52,7 @@ class Server:
                 self.write_cache()
 
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
-                    and datetime.datetime.strptime(self.cache[self.hostname][self.qtype]["time"], '%Y-%m-%d %H:%M:%S.%f')\
-                    + self.timeout > datetime.datetime.utcnow():
+                    and self.cache[self.hostname][self.qtype]["time"] + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
                 cache = self.cache[self.hostname][self.qtype]
                 self.ip = cache["ip"]
