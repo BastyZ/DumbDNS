@@ -48,7 +48,7 @@ class Server:
             # Lookup on Cache
             self.get_cache()
             if self.cache and self.cache[self.hostname] and self.cache[self.hostname][self.qtype]    \
-                    and self.cache[self.hostname][self.qtype]["time"] + self.timeout > datetime.datetime.utcnow():
+                    and datetime.datetime(self.cache[self.hostname][self.qtype]["time"]) + self.timeout > datetime.datetime.utcnow():
                 print("Cache used with", self.hostname)
                 cache = self.cache[self.hostname][self.qtype]
                 self.ip = cache["ip"]
