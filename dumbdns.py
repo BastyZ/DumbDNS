@@ -85,7 +85,7 @@ class Server:
             if not self.cache or not self.cache[self.hostname]:
                 self.cache[self.hostname] = dict()
             self.cache[self.hostname][self.qtype] = dict(response=literal_eval(self.response.decode("utf-8"),
-                                                         time=datetime.datetime.utcnow(), ip=self.ip)
+                                                         time=datetime.datetime.utcnow(), ip=self.ip))
             self.write_cache()
             # send response
             socket.sendto(self.response, address)
