@@ -172,6 +172,10 @@ class Server:
         with open("cache.json", "r", encoding="utf-8") as file:
             try:
                 self.cache = json.load(file)
+                for hostname in self.cache:
+                    for qtype in self.cache[hostname]:
+                        self.cache[hostname][qtype]["time"] = datetime.datetime.strptime(self.cache[hostname][qtype]["time"],
+                                                                                         "%Y-%m-%d %H:%M:%S.%fZ")
             except ValueError as e:
                 print("No cache or invalid JSON:", e)
                 self.cache = {}
